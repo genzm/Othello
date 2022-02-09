@@ -10,6 +10,28 @@ window.onload=function(){
     let   NumbersMessage=document.getElementById('Numbers');
     let   gameState=document.getElementById('WinOrNot');
 
+    const possiblePlaces=new Array(64).fill(1); //1で初期化 1は可能 0は不可能を表す
+    const normalEvaluateMap=
+        [150, 20, 20, 5, 5, 20, 10, 120,
+         10, 40, 5, 5, 5, 5, 40, 20,
+         20, 3, 15, 3, 3, 15, 3, 20,
+         5, 8, 3, 3, 3, 3, 8, 5,
+         5, 8, 3, 3, 3, 3, 8, 5,
+         20, 3, 15, 3, 3, 15, 3, 20,
+         10, 40, 5, 5, 5, 5, 40, 20,
+         150, 20, 20, 5, 5, 20, 10, 120,
+        ];
+    const modelEvaluateMap=
+        [120, -20, 20, 5, 5, 20, -20, 120,
+         -20, -40, -5, -5, -5, -5, -40, -20,
+         20, -5, 15, 3, 3, 15, -5, 20,
+         5, -5, 3, 3, 3, 3, -5, 5,
+         5, -5, 3, 3, 3, 3, -5, 5,
+         20, -5, 15, 3, 3, 15, -5, 20,
+         -20, -40, -5, -5, -5, -5, -40, -20,
+         120, -20, 20, 5, 5, 20, -20, 120
+        ]; //いいらしいやつ 今回は使用しない
+    const EstimitatedValueMap=new Array(64).fill(1);
 
 
     //盤にクリックイベントを作成
@@ -25,10 +47,15 @@ window.onload=function(){
             putOthello(index);
             changeOthello(index);
             tellWin();
+            upDatepossiblePlaces();
+            calculateEstimitedMap();
             changeOrder();
             console.log(othelloColor);
-
+            console.log(normalEvaluateMap);
+            console.log(possiblePlaces);
+            console.log(EstimitatedValueMap);
             displayedState.innerText=othelloColor;
+            enemyPlace();
         })
     }
 
@@ -218,5 +245,36 @@ window.onload=function(){
         else{
             gameState.innerText='Still is Not Finished!'
         }
+    }
+    //素直な評価値マップ
+    function upDatepossiblePlaces(){
+        for(let i=0; i<64; i++){
+            if(latticeElements[i].innerHTML!=''){
+                possiblePlaces[i]=0;
+            }
+        }
+    }
+    //Arrayの最大値を取る関数
+    function getMaxOfArray(numArray) {
+        return Math.max.apply(null, numArray);
+    }
+    //実評価値更新
+    function calculateEstimitedMap(){
+        for(let i=0; i<64; i++){
+            let nowValue=normalEvaluateMap[i]*possiblePlaces[i];
+            EstimitatedValueMap[i]=nowValue;
+        }
+    }
+    //相手キャラ(最大実評価値の場所を取るだけ)
+    function enemyPlace(){
+        const bestPlace=EstimitatedValueMap.indexOf(getMaxOfArray(EstimitatedValueMap));
+        putOthello(bestPlace);
+        changeOthello(bestPlace);
+        tellWin();
+        upDatepossiblePlaces();
+        calculateEstimitedMap();
+        changeOrder();
+        console.log("Now Estimi is "+EstimitatedValueMap);
+        displayedState.innerText=othelloColor;
     }
 }
